@@ -67,9 +67,9 @@ func (c *Container) Decrypt(enc Encrypted) (string, error) {
 
 	for i, ec := range enc {
 		// Check if in boundaries
-		if ec.h < c.Image.Dimension.Height && ec.w < c.Image.Dimension.Width {
+		if ec.Height < c.Image.Dimension.Height && ec.Width < c.Image.Dimension.Width {
 			// Calculate pixel position in the slice
-			arrayPos := ec.w + c.Image.Dimension.Width*ec.h
+			arrayPos := ec.Width + c.Image.Dimension.Width*ec.Height
 			// Retrieve Byte
 			dec[i] = byte(c.Image.Data[arrayPos] & 0b01111111)
 		} else {
@@ -78,6 +78,6 @@ func (c *Container) Decrypt(enc Encrypted) (string, error) {
 		}
 	}
 
-	// Converte encrypted bytes to string & return
+	// Convert encrypted bytes to string & return
 	return string(dec), nil
 }

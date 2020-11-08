@@ -6,8 +6,8 @@ import (
 
 // PixelPosition represents a pixels position on the image
 type PixelPosition struct {
-	w int
-	h int
+	Width  int `json:"width"`
+	Height int `json:"height"`
 }
 
 // PixelGroups represents a grouping of pixels based on their value
