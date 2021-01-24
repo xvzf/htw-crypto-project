@@ -166,8 +166,6 @@ func Write(f *os.File, in []PixelPosition) error {
 }
 ```
 
-```
-
 ### Testing The Implementation
 
 To ensure the implementation is working and can encrypt & afterwards decrypt ciphertext with a shared key, test cases have been implemented with the Go integrated unit-test framework.
