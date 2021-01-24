@@ -2,16 +2,13 @@
 
 
 ## Details on the cipher.
-
 The cipher presented in [*A New Symmetric Key Encryption Algorithm Using Images as Secret Keys*](https://ieeexplore.ieee.org/document/7420966, University Project HTW Saar) encrypts arbitrary ASCII data and uses a given image as a shared secret.
 It substitutes the ASCII to a ciphertext by mapping characters to pixel positions, thus generating a monoalphabetic substitution cipher.
 
 ## Implementation
-
 During this project, the described cipher has been implemented using the [Go programming language](https://golang.org/) aiming at a high encryption and decryption performance.
 
 ### Key Verification
-
 As described in the underlying paper, the substitution alphabet is derived from a given image source.
 The `pkg/image` package implements an interface to read and write arbitrary images used as keys and also provides an acceptance test checking the validity using an image as a key for the cipher.
 
@@ -75,24 +72,25 @@ type PixelGroups map[uint8][]PixelPosition
 The key, an abitrary image, is loaded using the aforementioned `pkg/image` package and checked for validity.
 After it passes the test, a trivial iteration across all pixels helps generating the `PixelGroups` datastructure.
 ```go
-func ExtractGroups(i *image.Image) PixelGroups {
+// Encrypt allows encryption of an arbitrary ASCII string
+func (c *Container) Encrypt(s string) (Encrypted, error) {
+	enc := make(Encrypted, len(s))
+	rnd := make([]byte, 4)
 
-	p := make(PixelGroups)
+	// Iterate over the input string, determine (random) pixel position
+	for i, b := range []uint8(s) {
+		if pixelGroup, ok := c.PixelGroups[b]; ok {
+			// Get the number of available options for the pixel value
+			availOptions := len(pixelGroup)
+			// Choose a random position out of the pixel group
+			d := int(binary.BigEndian.Uint32(rnd)) % availOptions
 
-	// Iterate through all pixels & update the grouping
-	for h := 0; h < i.Dimension.Height; h++ {
-		for w := 0; w < i.Dimension.Width; w++ {
-			v := i.Data[w+i.Dimension.Width*h] & 0b01111111
-			if _, ok := p[v]; !ok {
-				p[v] = []PixelPosition{{w, h}}
-			} else {
-				tmp, _ := p[v]
-				p[v] = append(tmp, PixelPosition{w, h})
-			}
+			ppos := pixelGroup[d]
+			enc[i] = ppos
 		}
 	}
 
-	return p
+	return enc, nil
 }
 ```
 
@@ -242,3 +240,36 @@ As seen in the results of the `BenchmarkContainer_Encrypt1MByteParallel-*` scena
 
 The encryption however benefits from running it in parallell and decrypts at `492 MB/s` with a single CPU core and `1.9 GB/s` with 6 cores.
 Adding the hyper-threading of the Intel processor results in a further performance boost to `2.19 GB/s`.
+
+
+## Security Analysis
+As described in the paper, the cipher maps one characters to possibly multiple pixels in an image.
+While this seems to be secure it is under some circumstances vulnerable to a frequency analysis.
+Based on the plaintext length, the image dimenson, pixel distribution mapping to characters in the image, and the character frequency of the plaintext it is possible to build groups of pixels based on their occurence assuming the random generator is uniform.
+
+
+The security of the cipher therefore drastically depends on the plaintext lenght and the image size.
+Given a frequency vulnerable plaintext with a lenght of *10.000* characters containing *50* unique characters, the image used as key decides whether the cipher can be cracked or not:
+- The image contains distinguished pixels for all characters, thus the ciphertext does not contain double values; **OTP like security**
+- The image does not contain distinguished pixels for all characters, resulting ciphertext values cannot be grouped based on their frequency; **Vulnerable to additional attacks, discussid in TODO**
+- The image does not contain distinguished pixels for all characters, resulting ciphertext values can be grouped based on their frequency; **Allows further analysis on simple substitution cipher**
+
+### Grouping Pixels
+Given an image that allows grouping of pixels, the following algorithm
+
+### Advanced Attack: 1 plaintext - n ciphertext
+Since the encryption is not injecting a nonce, always generating a unique plaintext, this attack scheme aims at analysing different ciphertext based on one plaintext.
+Especially on large plain/ciphertexts this allows an easy grouping of pixels unlinked to their occurence. A common battern is e.g. an e-mail header.
+
+This breaks down the cipher to a simple substitution cipher which can be cracked e.g. using a trivial frequency analysis
+
+
+### Advanced Attack: Adding known-plaintext attack
+The aforementioned attack allows us to group pixels based on many ciphertexts.
+While a simple freqency analysis can be effective solving the cipher, a known plaintext-ciphertext pair helps cracking a plaintext which is not vulnerable to frequency analysis.
+
+
+### Extracting the key image
+
+It is not possible to extract the original image as the pixel value space is reduced from 8 to 7 bits.
+However, mapping the cracked key to an image may help to identify structures of the original image while generating a valid key.
