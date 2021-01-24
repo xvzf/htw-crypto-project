@@ -3,8 +3,8 @@
 package crypt
 
 import (
+	"encoding/binary"
 	"errors"
-	"math/rand"
 
 	"github.com/xvzf/htw-crypto-project/pkg/image"
 )
@@ -47,13 +47,17 @@ func New(i *image.Image) (*Container, error) {
 func (c *Container) Encrypt(s string) (Encrypted, error) {
 	enc := make(Encrypted, len(s))
 
+	rnd := make([]byte, 4)
+
 	// Iterate over the input string, determine (random) pixel position
 	for i, b := range []uint8(s) {
 		if pixelGroup, ok := c.PixelGroups[b]; ok {
 			// Get the number of available options for the pixel value
 			availOptions := len(pixelGroup)
 			// Choose a random position out of the pixel group
-			ppos := pixelGroup[rand.Intn(availOptions)]
+			d := int(binary.BigEndian.Uint32(rnd)) % availOptions
+
+			ppos := pixelGroup[d]
 			enc[i] = ppos
 		}
 	}

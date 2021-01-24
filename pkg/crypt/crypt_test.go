@@ -90,7 +90,19 @@ func TestContainer_Encrypt_Decrypt(t *testing.T) {
 	}
 }
 
-func BenchmarkContainer_Encrypt1MByte(b *testing.B) {
+func BenchmarkContainer_Encrypt1Mbyte(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		cipher.Encrypt(testData1MByte)
+	}
+}
+
+func BenchmarkContainer_Decrypt1Mbyte(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		cipher.Decrypt(testData1MByteEnc)
+	}
+}
+
+func BenchmarkContainer_Encrypt1MByteParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			cipher.Encrypt(testData1MByte)
@@ -98,19 +110,7 @@ func BenchmarkContainer_Encrypt1MByte(b *testing.B) {
 	})
 }
 
-func BenchmarkContainer_Encrypt1024(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		cipher.Encrypt(testData1MByte)
-	}
-}
-
-func BenchmarkContainer_Decrypt1024(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		cipher.Decrypt(testData1MByteEnc)
-	}
-}
-
-func BenchmarkContainer_Decrypt1MByte(b *testing.B) {
+func BenchmarkContainer_Decrypt1MByteParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			cipher.Decrypt(testData1MByteEnc)
