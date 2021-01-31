@@ -96,7 +96,7 @@ func (c *Container) Encrypt(s string) (Encrypted, error) {
 ```
 
 During the encryption process, a loop iterates across the plaintext and determines the substitution for every character using a random entry out of the array mapped for the character.
-"`go
+```go
 // Encrypt allows encryption of an arbitrary ASCII string
 func (c *Container) Encrypt(s string) (Encrypted, error) {
 	enc := make(Encrypted, len(s))
@@ -120,7 +120,7 @@ func (c *Container) Encrypt(s string) (Encrypted, error) {
 The Decryption builds on a lookup function.
 A loop iterates across the ciphertext and retrieves the pixel value at the position the ciphertext references. This value is ANDed by `0b01111111` for retrieving the plaintext character.
 
-"`go
+```go
 // Decrypt allows decryption of an arbitrary encrypted ASCII string
 func (c *Container) Decrypt(enc Encrypted) (string, error) {
 	dec := make([]byte, len(enc))
@@ -145,7 +145,7 @@ func (c *Container) Decrypt(enc Encrypted) (string, error) {
 
 ### Input/Output operations
 For the ease of analyzing the ciphertext with different tools, a JSON format has been chosen, which encodes an array of `PixelPosition`.
-"`go
+```go
 // Encrypted contains a slice of PixelPositions
 type Encrypted []PixelPosition
 
